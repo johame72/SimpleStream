@@ -2,15 +2,26 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const STATION_NAME = "KEXP";
+const STATIONS = {
+    "KEXP": {
+        name: "KEXP",
+        url: "https://kexp.streamguys1.com/kexp160.aac",
+        type: "audio/aac"
+    },
+    "INTENSE": {
+        name: "Intense Radio",
+        url: "https://intenseradio.live-streams.nl:18000/live",
+        type: "audio/aac"  // Assuming the stream type is the same; adjust if different
+    }
+};
 
-// Placeholder function to get the bit rate. In a real-world scenario,
-// you'd need to integrate with a tool or library that can analyze the stream.
 function getCurrentBitRate() {
     return "160kbps";  // Placeholder value
 }
 
 app.get('/', (req, res) => {
+    const stationKey = req.query.station || "KEXP";  // Default to KEXP if no station parameter
+    const selectedStation = STATIONS[stationKey];
     const bitRate = getCurrentBitRate();
 
     res.send(`
@@ -26,11 +37,17 @@ app.get('/', (req, res) => {
             }
         </style>
 
-        <h1>${STATION_NAME}</h1>
+        <h1>${selectedStation.name}</h1>
         <p>Bit Rate: ${bitRate}</p>
         
+        <select onchange="location = this.value;">
+            ${Object.keys(STATIONS).map(key => `
+                <option value="/?station=${key}" ${key === stationKey ? 'selected' : ''}>${STATIONS[key].name}</option>
+            `).join('')}
+        </select>
+
         <audio controls autoplay>
-            <source src="https://kexp.streamguys1.com/kexp160.aac" type="audio/aac">
+            <source src="${selectedStation.url}" type="${selectedStation.type}">
             Your browser does not support the audio element.
         </audio>
     `);
